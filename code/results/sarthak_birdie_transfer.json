@@ -1,0 +1,72 @@
+{
+ "method": "cross-scan common-mode rejection (median of scans)",
+ "n_scans": 11,
+ "z_flag": 5.0,
+ "birdie_v": -168.6,
+ "global_sig_dex": 0.021884647842676647,
+ "per_scan": {
+  "5": {
+   "max_abs_Z": 10.738731028447186,
+   "argmax_v": -168.6038203052928,
+   "argmax_channel": 468
+  },
+  "15": {
+   "max_abs_Z": 6.456532051283547,
+   "argmax_v": 13.263977718926645,
+   "argmax_channel": 253
+  },
+  "25": {
+   "max_abs_Z": 5.549786975466985,
+   "argmax_v": 13.263977718926645,
+   "argmax_channel": 253
+  },
+  "35": {
+   "max_abs_Z": 5.306497074369948,
+   "argmax_v": 14.10987445389391,
+   "argmax_channel": 252
+  },
+  "45": {
+   "max_abs_Z": 4.013118592628686,
+   "argmax_v": 14.10987445389391,
+   "argmax_channel": 252
+  },
+  "55": {
+   "max_abs_Z": 3.138693422405341,
+   "argmax_v": 21.722945068898852,
+   "argmax_channel": 243
+  },
+  "65": {
+   "max_abs_Z": 4.628081281384147,
+   "argmax_v": 3.1132168989200526,
+   "argmax_channel": 265
+  },
+  "75": {
+   "max_abs_Z": 4.198127296841355,
+   "argmax_v": 3.1132168989200526,
+   "argmax_channel": 265
+  },
+  "85": {
+   "max_abs_Z": 6.55712269115324,
+   "argmax_v": -34.952136175871686,
+   "argmax_channel": 310
+  },
+  "115": {
+   "max_abs_Z": 6.744583304407712,
+   "argmax_v": -29.876755765934956,
+   "argmax_channel": 304
+  },
+  "135": {
+   "max_abs_Z": 8.127204014927832,
+   "argmax_v": -23.109581885930556,
+   "argmax_channel": 296
+  }
+ },
+ "birdie_max_abs_Z": 10.738731028447186,
+ "birdie_is_largest": true,
+ "common_mode_after": {
+  "181": 2.43757180417799,
+  "128": 2.232081446477782,
+  "32": 3.5256131254840666
+ },
+ "birdie_max_abs_Z_leave_one_out": 10.763035369822093
+}

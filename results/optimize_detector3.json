@@ -1,0 +1,174 @@
+{
+ "config": {
+  "note": "recovered from run log after plotting-section crash; numbers are the authoritative stdout of that run"
+ },
+ "rsp1_champion_grid": {
+  "w1_a0.05": {
+   "auroc_lofarref": 0.57,
+   "auroc_selfref": 0.54
+  },
+  "w1_a0.10": {
+   "auroc_lofarref": 0.72,
+   "auroc_selfref": 0.64
+  },
+  "w1_a0.20": {
+   "auroc_lofarref": 0.82,
+   "auroc_selfref": 0.82
+  },
+  "w1_a0.50": {
+   "auroc_lofarref": 0.84,
+   "auroc_selfref": 0.89
+  },
+  "w1_a1.00": {
+   "auroc_lofarref": 0.85,
+   "auroc_selfref": 0.97
+  },
+  "w2_a0.05": {
+   "auroc_lofarref": 0.58,
+   "auroc_selfref": 0.54
+  },
+  "w2_a0.10": {
+   "auroc_lofarref": 0.71,
+   "auroc_selfref": 0.63
+  },
+  "w2_a0.20": {
+   "auroc_lofarref": 0.87,
+   "auroc_selfref": 0.84
+  },
+  "w2_a0.50": {
+   "auroc_lofarref": 0.9,
+   "auroc_selfref": 0.92
+  },
+  "w2_a1.00": {
+   "auroc_lofarref": 0.93,
+   "auroc_selfref": 0.99
+  },
+  "w3_a0.05": {
+   "auroc_lofarref": 0.58,
+   "auroc_selfref": 0.54
+  },
+  "w3_a0.10": {
+   "auroc_lofarref": 0.71,
+   "auroc_selfref": 0.62
+  },
+  "w3_a0.20": {
+   "auroc_lofarref": 0.91,
+   "auroc_selfref": 0.88
+  },
+  "w3_a0.50": {
+   "auroc_lofarref": 0.95,
+   "auroc_selfref": 0.94
+  },
+  "w3_a1.00": {
+   "auroc_lofarref": 0.98,
+   "auroc_selfref": 0.99
+  },
+  "w5_a0.05": {
+   "auroc_lofarref": 0.6,
+   "auroc_selfref": 0.55
+  },
+  "w5_a0.10": {
+   "auroc_lofarref": 0.71,
+   "auroc_selfref": 0.62
+  },
+  "w5_a0.20": {
+   "auroc_lofarref": 0.94,
+   "auroc_selfref": 0.96
+  },
+  "w5_a0.50": {
+   "auroc_lofarref": 0.98,
+   "auroc_selfref": 1.0
+  },
+  "w5_a1.00": {
+   "auroc_lofarref": 0.98,
+   "auroc_selfref": 1.0
+  },
+  "w9_a0.05": {
+   "auroc_lofarref": 0.6,
+   "auroc_selfref": 0.55
+  },
+  "w9_a0.10": {
+   "auroc_lofarref": 0.7,
+   "auroc_selfref": 0.61
+  },
+  "w9_a0.20": {
+   "auroc_lofarref": 0.85,
+   "auroc_selfref": 0.82
+  },
+  "w9_a0.50": {
+   "auroc_lofarref": 0.97,
+   "auroc_selfref": 1.0
+  },
+  "w9_a1.00": {
+   "auroc_lofarref": 0.98,
+   "auroc_selfref": 1.0
+  }
+ },
+ "rsp1_det_ladder": {
+  "0.05": {
+   "det_lofarref": 0.048,
+   "det_selfref": 0.052000000000000005,
+   "auroc_lofarref": 0.575
+  },
+  "0.10": {
+   "det_lofarref": 0.048,
+   "det_selfref": 0.055999999999999994,
+   "auroc_lofarref": 0.721
+  },
+  "0.20": {
+   "det_lofarref": 0.133,
+   "det_selfref": 0.124,
+   "auroc_lofarref": 0.818
+  },
+  "0.50": {
+   "det_lofarref": 0.149,
+   "det_selfref": 0.217,
+   "auroc_lofarref": 0.836
+  },
+  "1.00": {
+   "det_lofarref": 0.165,
+   "det_selfref": 1.0,
+   "auroc_lofarref": 0.846
+  }
+ },
+ "lofar_champion_grid": {
+  "w1_a0.05": 0.51,
+  "w1_a0.10": 0.56,
+  "w1_a0.20": 0.7,
+  "w1_a0.50": 0.94,
+  "w1_a1.00": 0.99,
+  "w2_a0.05": 0.52,
+  "w2_a0.10": 0.58,
+  "w2_a0.20": 0.74,
+  "w2_a0.50": 0.96,
+  "w2_a1.00": 0.99,
+  "w3_a0.05": 0.52,
+  "w3_a0.10": 0.6,
+  "w3_a0.20": 0.75,
+  "w3_a0.50": 0.96,
+  "w3_a1.00": 0.99,
+  "w5_a0.05": 0.53,
+  "w5_a0.10": 0.61,
+  "w5_a0.20": 0.77,
+  "w5_a0.50": 0.96,
+  "w5_a1.00": 0.99,
+  "w9_a0.05": 0.53,
+  "w9_a0.10": 0.62,
+  "w9_a0.20": 0.77,
+  "w9_a0.50": 0.96,
+  "w9_a1.00": 0.99
+ },
+ "lofar_negative": {
+  "w1_a-0.10": 0.57,
+  "w1_a-0.20": 0.77,
+  "w1_a-0.50": 1.0,
+  "w3_a-0.10": 0.62,
+  "w3_a-0.20": 0.82,
+  "w3_a-0.50": 1.0
+ },
+ "lofar_multi": {
+  "n2": 0.75,
+  "n4": 0.8,
+  "n8": 0.83
+ }
+}

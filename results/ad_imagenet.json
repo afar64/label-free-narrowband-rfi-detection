@@ -1,0 +1,197 @@
+{
+ "config": {
+  "backbone": "wide_resnet50_2 IMAGENET1K_V2, layer2+layer3, native 64x64 input, maxpool removed, 3-channel replicate, ImageNet norm, PCA 1536->256 (clean-fit)",
+  "bank": 10000,
+  "device": "cpu"
+ },
+ "patch": {
+  "auroc": 0.6658176187330815,
+  "auprc": 0.5654482783579556,
+  "best_f1": 0.5332667166291948,
+  "thr": 29.747173309326172
+ },
+ "by_stratum": {
+  "transient/partial (no persistent column)": {
+   "n": 23344,
+   "auroc": 0.6472873450558481
+  },
+  "persistent narrow (1-3 columns)": {
+   "n": 628,
+   "auroc": 0.7399794963074662
+  },
+  "multi-column / wide (>=4 columns)": {
+   "n": 126,
+   "auroc": 0.7321372827085507
+  }
+ },
+ "rsp1": {
+  "p95": 0.06629125773906708,
+  "0.05": {
+   "det": 0.0,
+   "auroc": 0.5
+  },
+  "0.10": {
+   "det": 0.0,
+   "auroc": 0.5
+  },
+  "0.20": {
+   "det": 0.0,
+   "auroc": 0.5
+  },
+  "0.50": {
+   "det": 0.0,
+   "auroc": 0.5
+  },
+  "1.00": {
+   "det": 0.0,
+   "auroc": 0.5
+  }
+ },
+ "pixel": "skipped on this arm (CPU budget; see ad_baseline.json)",
+ "comparison_in_domain": {
+  "patch": {
+   "PC": {
+    "auroc": 0.7724373329066593,
+    "auprc": 0.7156610833228034,
+    "best_f1": 0.6236303299730762,
+    "thr": 4.168735504150391
+   },
+   "PD": {
+    "auroc": 0.7501448236460326,
+    "auprc": 0.6394773760818777,
+    "best_f1": 0.6029219045770033,
+    "thr": 242.28558349609375
+   }
+  },
+  "by_stratum": {
+   "transient/partial (no persistent column)": {
+    "n": 23344,
+    "auroc": {
+     "PC": 0.7595860406915987,
+     "PD": 0.7383851847598906
+    }
+   },
+   "persistent narrow (1-3 columns)": {
+    "n": 628,
+    "auroc": {
+     "PC": 0.7960791261195808,
+     "PD": 0.7566996889053789
+    }
+   },
+   "multi-column / wide (>=4 columns)": {
+    "n": 126,
+    "auroc": {
+     "PC": 0.8806201446677191,
+     "PD": 0.8598735866950888
+    }
+   }
+  },
+  "pixel": {
+   "PC": {
+    "auroc": 0.8813362646212648,
+    "auprc": 0.2374522143786193
+   },
+   "PD": {
+    "auroc": 0.8779522237345672,
+    "auprc": 0.15021540839902478
+   }
+  },
+  "rsp1": {
+   "n_patches": 249,
+   "sweep": {
+    "PC_lofar": {
+     "p95": 1.937007188796997,
+     "0.05": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.10": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.20": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.50": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "1.00": {
+      "det": 0.0,
+      "auroc": 0.5
+     }
+    },
+    "PC_self": {
+     "p95": 0.00390625,
+     "0.05": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.10": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.20": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.50": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "1.00": {
+      "det": 0.0,
+      "auroc": 0.5
+     }
+    },
+    "PD_lofar": {
+     "p95": 59.89384841918945,
+     "0.05": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.10": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.20": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.50": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "1.00": {
+      "det": 0.0,
+      "auroc": 0.5
+     }
+    },
+    "PD_self": {
+     "p95": 21.63357162475586,
+     "0.05": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.10": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.20": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "0.50": {
+      "det": 0.0,
+      "auroc": 0.5
+     },
+     "1.00": {
+      "det": 0.0,
+      "auroc": 0.5
+     }
+    }
+   }
+  }
+ }
+}

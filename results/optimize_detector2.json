@@ -1,0 +1,80 @@
+{
+ "dae_alone": {
+  "overall": 0.7940257105538371,
+  "transient": 0.7895834248909853,
+  "narrow": 0.8262558987258857,
+  "wide": 0.6377794153770573
+ },
+ "fusion": {
+  "fisher2 (MRD+AE)": {
+   "overall": 0.8138618825968795,
+   "transient": 0.7902703284349017,
+   "narrow": 0.9679230058860293,
+   "wide": 0.9227025846775295
+  },
+  "fisher3 (MRD+AE+STF)": {
+   "overall": 0.8528138852484175,
+   "transient": 0.8332187049222314,
+   "narrow": 0.9700682091193552,
+   "wide": 0.9830358361308988
+  },
+  "fisher3' (MRD+DAE+STF)": {
+   "overall": 0.8752544499554074,
+   "transient": 0.8575687588235922,
+   "narrow": 0.9842458803495342,
+   "wide": 0.991790168945659
+  },
+  "fisher4 (+ST-max)": {
+   "overall": 0.857237778189629,
+   "transient": 0.8383591849681123,
+   "narrow": 0.9657985317575067,
+   "wide": 0.9878790359998908
+  },
+  "fisher5 (all)": {
+   "overall": 0.8629393448426165,
+   "transient": 0.8466811828448949,
+   "narrow": 0.9518074224705568,
+   "wide": 0.9740072054368296
+  }
+ },
+ "champion": "fisher3' (MRD+DAE+STF)",
+ "confirmation": {
+  "fisher3' (MRD+DAE+STF)": {
+   "overall": 0.8885067231040564,
+   "transient": 0.870395771586643,
+   "narrow": 0.996038484959201,
+   "wide": 0.993026455026455
+  },
+  "fisher3 (MRD+AE+STF)": {
+   "overall": 0.8730725220458554,
+   "transient": 0.8525423993940591,
+   "narrow": 0.9948142735355011,
+   "wide": 0.9873227513227512
+  },
+  "ST-max(ref)": {
+   "overall": 0.8235463562610229,
+   "transient": 0.7974216557992492,
+   "narrow": 0.9744245524296675,
+   "wide": 0.9628888888888889
+  }
+ },
+ "bootstrap_confirm": {
+  "fisher3' (MRD+DAE+STF)": [
+   0.8650138160732296,
+   0.9090859905699458
+  ],
+  "fisher3 (MRD+AE+STF)": [
+   0.8484909207993596,
+   0.8954757505180594
+  ],
+  "ST_max": [
+   0.7904589337660334,
+   0.8538260068469083
+  ]
+ },
+ "config": {
+  "EPOCHS": 30,
+  "clean_patches": 9217,
+  "note": "STM p-reference uses its own test distribution (documented limitation, label-free)"
+ }
+}

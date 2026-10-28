@@ -1,0 +1,176 @@
+{
+ "belllabs": {
+  "name": "belllabs",
+  "n_patches": 1388,
+  "chi1": 132901776.0,
+  "occupancy": {
+   "stf_flag_rate": 0.037463976945244955,
+   "stf_p95_det": 0.037463976945244955,
+   "stm_p95_det": 0.037463976945244955
+  },
+  "ladder": {},
+  "notes": "",
+  "position_axis": "rows are independent sky positions; the persistent-line injection model is ill-posed (astronomical structure dominates the null) - corpus retained as an occupancy control only",
+  "runtime_s": 33.2275652885437
+ },
+ "millennium": {
+  "name": "millennium",
+  "n_patches": 63,
+  "chi1": 158890608.0,
+  "occupancy": {
+   "stf_flag_rate": 0.0625,
+   "stf_p95_det": 0.0625,
+   "stm_p95_det": 0.0625
+  },
+  "ladder": {},
+  "notes": "",
+  "position_axis": "rows are independent sky positions; the persistent-line injection model is ill-posed (astronomical structure dominates the null) - corpus retained as an occupancy control only",
+  "runtime_s": 1.274198055267334
+ },
+ "bkb3": {
+  "name": "bkb3",
+  "n_patches": 567,
+  "chi1": 624894.8125,
+  "occupancy": {
+   "stf_flag_rate": 0.035211267605633804,
+   "stf_p95_det": 0.035211267605633804,
+   "stm_p95_det": 0.04225352112676056
+  },
+  "ladder": {
+   "0.10": {
+    "MRD": 0.7710585697282286,
+    "DAE": 0.5278342590755802,
+    "STF": 0.6102707796072209,
+    "STM": 0.6544584407855584,
+    "fisher3'": 0.7671282979567546
+   },
+   "0.20": {
+    "MRD": 0.8048254314620115,
+    "DAE": 0.5251872148383258,
+    "STF": 0.6102831779408848,
+    "STM": 0.6515634298750248,
+    "fisher3'": 0.7902139952390399
+   },
+   "0.50": {
+    "MRD": 0.8253818686768498,
+    "DAE": 0.5543480956159492,
+    "STF": 0.6102955762745488,
+    "STM": 0.6494619123189844,
+    "fisher3'": 0.8157235667526285
+   }
+  },
+  "notes": "",
+  "runtime_s": 33.751994609832764
+ },
+ "adhyanthac": {
+  "name": "adhyanthac",
+  "n_patches": 31,
+  "chi1": 0.0,
+  "occupancy": {
+   "stf_flag_rate": 0.0,
+   "stf_p95_det": 0.0,
+   "stm_p95_det": 0.0
+  },
+  "ladder": {
+   "0.10": {
+    "MRD": 1.0,
+    "DAE": 1.0,
+    "STF": 1.0,
+    "STM": 1.0,
+    "fisher3'": 1.0
+   },
+   "0.20": {
+    "MRD": 1.0,
+    "DAE": 1.0,
+    "STF": 1.0,
+    "STM": 1.0,
+    "fisher3'": 1.0
+   },
+   "0.50": {
+    "MRD": 1.0,
+    "DAE": 1.0,
+    "STF": 1.0,
+    "STM": 1.0,
+    "fisher3'": 1.0
+   }
+  },
+  "notes": "",
+  "comb": {
+   "n_peaks_z5": 0,
+   "spacing_bins": 1025.0,
+   "spacing_kHz": 62.56103515625,
+   "spacing_km_s": 13.20420343352254,
+   "spacing_ppm": 44.04448171115279,
+   "autocorr": NaN,
+   "p_mc": 0.0,
+   "null_ac_p95": 0.0,
+   "contrast_on_lattice": 0.0,
+   "contrast_off_lattice": 0.0,
+   "peaks_on_lattice": 0
+  },
+  "runtime_s": 3.7215120792388916
+ },
+ "pictor": {
+  "name": "pictor",
+  "n_patches": 4000,
+  "chi1": 170.9036407470703,
+  "occupancy": {
+   "stf_flag_rate": 0.0005,
+   "stf_p95_det": 0.0005,
+   "stm_p95_det": 0.0005
+  },
+  "ladder": {
+   "0.10": {
+    "MRD": 1.0,
+    "DAE": 0.54391075,
+    "STF": 0.5,
+    "STM": 0.8836675,
+    "fisher3'": 0.8854960000000001
+   },
+   "0.20": {
+    "MRD": 1.0,
+    "DAE": 0.6088327499999999,
+    "STF": 0.5,
+    "STM": 0.9713115,
+    "fisher3'": 0.910569125
+   },
+   "0.50": {
+    "MRD": 1.0,
+    "DAE": 0.7029015000000001,
+    "STF": 0.5,
+    "STM": 0.9994485000000001,
+    "fisher3'": 0.9618728750000001
+   }
+  },
+  "notes": "",
+  "runtime_s": 340.13983249664307
+ },
+ "lab": {
+  "name": "lab",
+  "n_patches": 2945,
+  "chi1": 316.5841369628906,
+  "occupancy": {
+   "stf_flag_rate": 0.0461642905634759,
+   "stf_p95_det": 0.0461642905634759,
+   "stm_p95_det": 0.0746775288526816
+  },
+  "ladder": {},
+  "notes": "",
+  "position_axis": "rows are independent sky positions; the persistent-line injection model is ill-posed (astronomical structure dominates the null) - corpus retained as an occupancy control only",
+  "runtime_s": 64.80286908149719
+ },
+ "ttrt": {
+  "name": "ttrt",
+  "n_spectra": 1,
+  "max_abs_z": null,
+  "notes": "1-D corpus",
+  "degenerate": "quasi-noiseless single profile: residual MAD ~ 0, z statistic undefined; corpus excluded from consistency claims"
+ },
+ "kavinfidel": {
+  "name": "kavinfidel",
+  "n_spectra": 5,
+  "max_abs_z": null,
+  "notes": "1-D corpus",
+  "degenerate": "quasi-noiseless single profile: residual MAD ~ 0, z statistic undefined; corpus excluded from consistency claims"
+ }
+}

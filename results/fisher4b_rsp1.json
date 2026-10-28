@@ -1,0 +1,21 @@
+{
+ "ladder": {
+  "0.10": {
+   "auroc_lofarref": 0.7208915985226045,
+   "auroc_selfref": 0.6422477056821665
+  },
+  "0.20": {
+   "auroc_lofarref": 0.8178577764874759,
+   "auroc_selfref": 0.8180593861389333
+  },
+  "0.50": {
+   "auroc_lofarref": 0.8357365203787036,
+   "auroc_selfref": 0.8936146191190464
+  },
+  "1.00": {
+   "auroc_lofarref": 0.8458492604957986,
+   "auroc_selfref": 0.9747746004096708
+  }
+ },
+ "note": "PC256 member via validated WRN50@256 machinery (same backbone/bank protocol as the official stack); PC reference = own clean-train scores (bank from same set, documented)"
+}

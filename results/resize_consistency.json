@@ -1,0 +1,22 @@
+{
+ "config": {
+  "backbone": "WRN50 IMAGENET1K_V2 (== official PatchCore)",
+  "bank": "random 10k of clean-train features, per resolution"
+ },
+ "rsp1_official256_ladder": {
+  "0.10": 0.5,
+  "0.20": 0.5,
+  "0.50": 0.5,
+  "1.00": 0.5
+ },
+ "lofar_native64": {
+  "overall": 0.6615,
+  "narrow": 0.7792
+ },
+ "lofar_upsampled256": {
+  "overall": 0.7101059999999999,
+  "narrow": 0.7734029850746269,
+  "n_narrow": 67,
+  "note": "bank = uniform 3-positions-per-patch subsample (memory)"
+ }
+}

@@ -1,0 +1,907 @@
+% !TeX program = pdflatex
+% =========================================================================
+% IEEE TIM manuscript draft --- 21cm/RSP1 engineering paper
+% Build:  pdflatex manuscript_TIM.tex  (x2 for refs)
+% Figures: injection_maps.png, fig_forest.png are read from
+%          F:/data/21cmHI/06_RFI_LABELED/ via \\graphicspath
+% TODO before submission:
+%   [1] author names / affiliations / funding
+%   [2] verify citations marked TODO (PatchCore/PaDiM/EfficientAD/PNU/Saraos)
+%   [3] HERA third-dataset column (download in flight, Zenodo throttled)
+%   [4] decide final framing: narrow-band-optimal (max-z) vs overall-optimal
+%       (Fisher3') --- both reported here
+% =========================================================================
+\documentclass[journal]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{cite}
+\graphicspath{{F:/data/21cmHI/06_RFI_LABELED/}}
+
+\newcommand{\auroc}{\mathrm{AUROC}}
+
+\begin{document}
+
+\title{Label-Free Detection of Narrowband Radio-Frequency Interference in
+Low-Cost Radio-Telescope Spectrometers: Diagnosis, Three-Member Fusion, and
+Injection-Validated Performance}
+
+\author{%
+% TODO[1]: author block
+Anonymous Author(s)% placeholder
+\thanks{Manuscript received XXX; revised XXX. % TODO[1]
+The author is with XXX (e-mail: XXX).}}
+
+\markboth{IEEE Transactions on Instrumentation and Measurement}%
+{Label-Free Narrowband RFI Detection for Low-Cost Spectrometers}
+
+\maketitle
+
+\begin{abstract}
+Weak, persistent \emph{narrowband} interference is the dominant data-quality
+limit of low-cost software-defined-radio (SDR) spectrometers --- and we show
+that it is invisible to every detector family in current practice, then give a
+label-free detector that sees it.  The diagnosis is quantitative: through controlled injection--recovery on a public, hand-labelled
+LOFAR benchmark (24\,525 dynamically-spectrum patches, stratified by RFI
+morphology), we show that weak persistent \emph{narrowband} RFI escapes three
+entire families of detectors for structurally different reasons --- patch-based
+deep networks respond to feature area and miss a one-pixel line at any
+contrast (at chance to $+20\%$ contrast on the benchmark and at
+\emph{every} amplitude on the real instrument); the classical
+SumThreshold workhorse is blinded by the multiple-comparison floor of its
+single-threshold ladder; and industrial anomaly detectors (PatchCore, PaDiM) with simplified
+memory banks dilute the line into their receptive fields; a
+fully-provisioned PatchCore closes most of the benchmark gap but
+fails to transfer to the real instrument and costs three orders of
+magnitude more compute.  We then propose a label-free
+Fisher-combined detector whose members each own one blind region: a
+temporal-median residual detector (MRD), a denoising autoencoder trained
+\emph{self-supervised} on quiet data plus synthetic RFI, a calibrated
+flag-count member, and --- once replicated and found to be the strongest
+single baseline --- the official PatchCore stack itself as a fourth
+member; all p-values use only clean-data calibration.  On a held-out confirmation split of 55 unseen LOFAR
+images the fusion reaches overall $\auroc = 0.914$
+[0.898, 0.929] versus $0.824$ [0.790, 0.854] for tuned SumThreshold, with
+decisive CI separation; on the persistent-narrowband stratum the
+median-based stage itself attains
+$0.998$ [0.994, 1.000] (paired permutation $p<1/2000$ against the classical
+baseline), and the full fusion confirms $0.997$ on the held-out stratum.  On a real ~EUR~200 instrument (RSP1, single dish, urban site)
+the pipeline blindly discovers a $66.28$\,kHz comb artefact ($10^{4}$-permutation
+and 64-channel-block-permutation $p<1\mathrm{e}{-4}$) and recovers injected one-pixel lines from $+10\%$ contrast while
+all four baseline families remain at chance.  The detector runs at
+4.1\,ms/patch on CPU --- $7.5\times$ faster than the classical pipeline.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Radio-frequency interference, radio telescopes, spectrograms, anomaly
+detection, autoencoders, Fisher combination, software-defined radio,
+injection--recovery.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{T}{he} hydrogen 21-cm line has become the standard first target
+for low-cost software-defined-radio spectrometers in teaching and
+citizen-science contexts
+\cite{saraos2026,pnu2025,phelps2024}.  As these instruments multiply, the
+practical obstacle is no longer sensitivity but \emph{data quality}:
+urban sites, consumer-grade receivers, and unshielded digital electronics
+produce radio-frequency interference (RFI) that contaminates spectra in
+ways that are easy to plot and hard to certify.  Professional observatories
+answers this with mature flagging pipelines --- most prominently
+SumThreshold inside AOFlagger \cite{offringa2010,offringa2012} --- while a
+rapidly growing literature applies deep networks to RFI segmentation
+\cite{akeret2017,vafaieisadr2020,mesarcik2022,mesarcik2023,dutoit2024,pritchard2024,rfihwt2025}.
+
+This paper starts from a measurement question rather than a segmentation
+one: \emph{what does each detector family actually fail to see, and why?}
+Using controlled injection--recovery on a public, expert-labelled LOFAR
+dataset \cite{mesarcik2022}, with performance stratified by RFI morphology,
+we find that weak, persistent, \emph{narrowband} interference --- one
+spectral channel elevated by less than a few times the noise, persisting
+across the analysed time window --- escapes all four families of current
+practice simultaneously, for four different structural reasons:
+
+\begin{enumerate}
+\item \textbf{Deep patch detectors are area detectors.}  A four-level
+stride-2 autoencoder cannot see a one-pixel line at \emph{any} contrast
+(AUROC $0.500$ from $+5\%$ to $+100\%$): the first pooling level averages
+the line away.  The blindness extends to the negative (absorption-like)
+domain.
+\item \textbf{The classical threshold ladder has a multiple-comparison
+floor.}  A faithful SumThreshold implementation
+\cite{offringa2010} calibrated to the published false-alarm operating point
+cannot flag persistent lines below its own $99.9\%$ pixel threshold; its
+patch-level statistic is dominated by the heavy-tailed extremes of the
+smallest windows.  Rank performance only appears from $+50\%$ contrast.
+\item \textbf{Industrial anomaly detectors dilute the line.}  PatchCore- and
+PaDiM-style memory-bank methods \cite{roth2022,defard2021}, transplanted with
+in-domain features, remain at chance for one-pixel injections: the feature
+vector at each position aggregates a $\ge 7\times7$ receptive field.
+With ImageNet features the additional domain gap costs a further
+$0.11$ AUROC.
+\end{enumerate}
+
+All three failures share one abstraction: \emph{any statistic computed per
+sample or per patch, without aggregation along the time axis, cannot see a
+persistent line whose per-sample contrast is below the multiple-testing
+floor}.  The remedy is embarrassingly simple and sixty years old: aggregate
+along time \emph{first}.  Our stage-1 detector (MRD, median-residual) does
+exactly this and reaches AUROC $0.998$ [0.995, 1.000] on the
+persistent-narrowband stratum --- far above every member of all three
+families.
+
+A single detector is not a system, however: MRD is blind to short transients
+by construction.  We therefore build a \emph{label-free three-member fusion}
+--- MRD, a denoising autoencoder (DAE) trained self-supervised on quiet data
+plus synthetic RFI of matched morphology, and a calibrated flag-count member
+--- combined by Fisher's method with p-values taken from clean-data
+calibration distributions only.  Model selection uses a pre-registered
+selection/confirmation split of the test images; the confirmation half is
+scored once, after which it is frozen.
+
+\subsection*{Contributions}
+\begin{enumerate}
+\item \textbf{A quantified, mechanism-level diagnosis} of narrowband-RFI
+blindness across deep, classical, industrial, and foundation-model detector
+families
+(injection maps over width $\times$ amplitude, Figs.~\ref{fig:maps});
+including a previously unreported \emph{anti-correlated} failure mode of
+max-normalised SumThreshold for wide weak lines (AUROC down to $0.36$).
+\item \textbf{A label-free Fisher fusion} (MRD + synthetic-RFI denoising
+autoencoder + calibrated flag counts, joined by the official PatchCore
+stack as a calibrated fourth member) with confirmation-half overall
+$auroc=0.914$ [0.898, 0.929] versus $0.824$ [0.790, 0.854] for the strongest
+classical baseline, and $0.997$ on persistent narrowband
+(paired permutation $p<1/2000$).  No RFI labels are used anywhere in
+training, calibration, or fusion.
+\item \textbf{A stratified, injection-validated evaluation protocol}
+(morphology strata, width$\times$amplitude recovery maps, negative-line and
+multi-line injections, image-level cluster bootstrap, selection/confirmation
+discipline) released as a reusable checklist for low-cost spectrometers.
+\item \textbf{Real-instrument closure}: on the RSP1 urban-site instrument the
+pipeline blindly discovers a deterministic $66.28$\,kHz comb
+(400-permutation $p<0.005$) and recovers injected one-pixel lines from
+$+10\%$ contrast where all baseline families remain at chance; runtime is
+4.1\,ms/patch on CPU, $7.5\times$ faster than the classical pipeline.
+\end{enumerate}
+
+\section{Instruments, Data, and Evaluation Protocol}
+\subsection{LOFAR benchmark}
+We use the public hand-labelled LOFAR RFI dataset distributed with
+RFI-NLN \cite{mesarcik2022}: $7465$ train and $109$ test dynamic spectra of
+$512\times512$ pixels with expert RFI masks.  Following the reference
+pipeline we cut $64\times64$ patches with stride 32 (a $15\times15$ grid per
+image), giving $24\,525$ test patches in a fixed, reproducible order; each
+test patch is identified with its parent image (index $i//225$), which
+enables the cluster bootstrap below.  Patches are labelled positive if any
+pixel is RFI ($8508$ positive, $34.7\%$); the labelled RFI pixel fraction is
+$0.77\%$.
+
+\subsection{Morphology strata}
+From the expert mask we derive, per patch, the number of \emph{persistent}
+columns (flagged in $>60\%$ of time rows) and the fraction of RFI pixels
+inside persistent columns, and classify: \textbf{transient/partial}
+(no persistent column; $n=23\,344$), \textbf{persistent narrowband}
+(1--3 persistent columns carrying $>60\%$ of the RFI pixels; $n=628$), and
+\textbf{multi-column/wide} ($\ge4$ persistent columns; $n=126$).  All
+benchmark tables report stratum-versus-clean AUROC, because the overall
+number hides exactly the failures this paper is about
+(Section~\ref{sec:results}).
+
+
+427 positive patches (5\% of positives) have \emph{mixed} morphology --- 1--3 persistent columns carrying at most 60\% of the RFI power --- and are assigned to their dominant type; the stratum AUROCs shift by at most $+0.015$ (transient) and $0.0001$ (narrow/wide), leaving every headline number unchanged.
+\subsection{The RSP1 instrument}
+RSP1 is a EUR~200-class single-dish spectrometer: an SDRplay RSP1
+zero-IF receiver (2 or 4\,MS/s dual chain, 59\,dB manual gain, no AGC)
+fed by a commercial mesh dish (aperture 1.2--1.5\,m at 1420\,MHz) with no
+front-end filter or additional LNA, operated from an urban site in Guilin,
+China ($25.32^\circ$N, $110.41^\circ$E, 198\,m).  The tuner is offset
+$+500$\,kHz from the line rest frequency to keep the hydrogen line away from
+the zero-IF spur; integrations are 600\,s drift scans.  Its data are used
+here only for real-instrument validation (Section~\ref{sec:rsp1val}), never
+for training or calibration.
+
+\subsection{Injection--recovery methodology}
+Detection performance is validated by \emph{injection}: synthetic RFI of
+controlled morphology (width $w\in\{1,2,3,5,9\}$ pixels; amplitude
+$A\in\{5,10,20,50,100\}\%$; both signs; $n\in\{1,2,4,8\}$ simultaneous
+lines) is multiplied into base spectrograms, and each detector is scored by
+AUROC of injected-versus-base patches.  Operating thresholds are always the
+95th percentile of the detector's own scores on the un-injected base set
+(no test labels are used for any calibration).  The two-dimensional
+width$\times$amplitude map (Fig.~\ref{fig:maps}) makes the \emph{shape} of
+each family's blind region directly visible.
+
+\subsection{Selection/confirmation discipline and uncertainty}
+The 109 test images are split into a \emph{selection} half (54 images) and a
+\emph{confirmation} half (55 images).  All architecture, aggregation, fusion-
+and member-search choices in Sections~IV--V are made on the selection half
+only; the confirmation half is scored once, at the end, and never revisited.
+Uncertainty is quantified by an \emph{image-level} cluster bootstrap
+($B=1000$ resamples of the 109 or 55 images): patches within one image are
+strongly correlated, so patch-level resampling would overstate the effective
+sample size.
+
+\section{Detector Families Under Comparison}
+\subsection{SumThreshold (classical reference)}
+We implement the published recipe \cite{offringa2010} faithfully: in log
+power, a sliding \emph{local median} surface (the estimator the paper itself
+prefers over sliding averages) with two window sizes $K\in\{9,17\}$ and two
+passes (the second re-estimates the surface with first-pass flagged pixels
+replaced); on the residual, one-dimensional SumThreshold in \emph{both}
+directions (along time per channel, along frequency per sample), two-sided,
+with window sizes $M\in\{1,\dots,64\}$ and average-threshold scaling
+$\chi_M=\chi_1/\rho^{\log_2 M}$, $\rho=1.5$ (their Eq.~12), the threshold
+measured relative to the residual mode.  The base sensitivity $\chi_1$ is
+binary-searched on 4000 \emph{clean training} patches to a per-pixel false
+alarm of $10^{-3}$ (their stated operating regime), yielding
+$\chi_1=12.8$.  The iterative flag-exclusion refinement of the authors'
+technical report \cite{offringa2013} is not implemented; this plain variant
+is the one analysed in the original false-positive section, and we state the
+limitation explicitly.  Two patch scores are derived: the flag count at
+$\chi_1$ (classical decision) and the max-normalised excess statistic.
+
+\subsection{ConvAE (deep reference)}
+A four-level stride-2 convolutional autoencoder (width 16, latent 128,
+$6.5\times10^4$ parameters) trained on clean training patches only,
+patch score = max of the $3\times3$-smoothed squared reconstruction error.
+The aggregation ablation (Section~\ref{sec:ablation}) replaces max by the
+top-$k$ mean; top-16 is selected.
+
+\subsection{Industrial anomaly detection}
+PatchCore \cite{roth2022} and PaDiM \cite{defard2021} are reimplemented per
+their published recipes with two feature sources: (i) \emph{in-domain} ---
+block-2/3 features of the clean-trained autoencoder encoder (256 positions
+$\times$ 96 dimensions per patch; memory bank = random 10\,000-subsample of
+the clean-train features; 1-NN L2 scoring); (ii) \emph{ImageNet} ---
+WideResNet-50 layer-2/3 features (the published backbone), 3-channel
+replication, PCA to 256 dims fitted on clean data.  The two arms quantify
+the ImageNet$\to$spectrogram domain gap.
+
+\subsection{MRD (median-residual detector, stage 1)}
+For a log-power patch $L$, with $K$-wide median filtering $m_K$ along
+frequency,
+\begin{align}
+R &= L - m_K(L), &
+d[c] &= \mathrm{median}_t\, R[t,c], \\
+e &= d - m_K(d), &
+\sigma &= 1.2533\,\widehat{\mathrm{MAD}}_t(R)/\sqrt{H},
+\end{align}
+and the patch score is $z=\max_{K\in\{5,9,17,33\}}\max_c |e[c]|/\sigma$.
+The time median makes persistent narrowband columns survive while transient
+noise averages down by $\sqrt{H}$; the scale set is shown by ablation
+(Section~\ref{sec:ablation}) to matter little for narrowband performance
+($0.993$--$0.998$ for any reasonable set) --- the aggregation, not the
+scales, carries the result.  The statistic is two-sided, so absorption-like
+(negative) interference is detected with equal sensitivity.
+
+\section{Label-Free Three-Member Fusion}
+\label{sec:fusion}
+\subsection{Members}
+\textbf{(i) MRD} (above): owns persistent narrowband lines.
+\textbf{(ii) DAE}: the same autoencoder architecture retrained
+\emph{self-supervised} as a denoiser: inputs are quiet training patches with
+synthetic RFI injected (narrowband lines 1--3 px, both signs, 5--50\%;
+wide bands 9--17 px, 5--30\%; transient bursts 2--8 rows, 20--100\%), targets
+are the clean patches.  No real RFI and no labels are involved; the
+synthetic morphology matches the evaluation strata by design.  Patch score =
+top-16 mean of the smoothed error map (selected over max/top-3/top-8).
+Training costs 6.4 minutes on CPU (9217 patches, 30 epochs).
+\textbf{(iii) ST-flags}: the SumThreshold flag count at $\chi_1$ --- a
+classical member that responds to \emph{area} rather than persistence or
+contrast.
+
+\subsection{Combination}
+Each member's score is converted to an upper-tail empirical p-value under
+its own clean-training calibration distribution (mid-rank CDF) --- in
+conformal-prediction terminology, every member is \emph{split-conformal
+calibrated}, so each operating point inherits a finite-sample,
+distribution-free false-alarm guarantee at the member level.  Members are
+combined by Fisher's method, $X=-2\sum_i \ln p_i$.  Because the members
+share the underlying spectrogram, the $\chi^2$ independence assumption
+behind Fisher's nominal null does \emph{not} hold: on clean data the
+variance of $X$ is $40.4$ against $8.0$ for four independent members
+($5.0\times$; effective degrees of freedom $\approx 20$ by Brown's
+correction).  We therefore never consume the nominal $\chi^2$ p-value of
+the fusion --- all fused thresholds are empirical clean-data quantiles ---
+and the dependence is reported as a measured quantity.  The rule itself is
+ablated against the TSP optimality regimes on the selection half: Tippett
+(minimum p, sparse-signal optimal) $0.897$, truncated products
+$\tau\in\{0.01,0.05,0.1\}$ $0.767$--$0.887$, Fisher $0.899$ --- Fisher
+wins, consistent with its asymptotic optimality for dense signals
+(Littell \& Folks); the Brown-corrected and empirically-ranked variants
+are monotone transforms of the same statistic and rank identically.
+Member search on the selection half
+(Section~\ref{sec:ablation}) shows the three members above are sufficient;
+adding the max-normalised SumThreshold statistic \emph{hurts} (its
+anti-correlated failure cells, Section~\ref{sec:results}, pollute the
+combination) --- a negative result we report transparently.
+
+\section{Results}
+\label{sec:results}
+\subsection{Stratified benchmark with confidence intervals}
+Table~\ref{tab:main} reports overall and per-stratum AUROC with image-level
+95\% CIs (full test set, $B=1000$).  Three observations.  First, the overall
+numbers of the fusion ($0.839$ [0.822, 0.856]) and tuned SumThreshold
+($0.811$ [0.786, 0.837]) \emph{overlap}: on the pooled test set the two are
+statistically tied, and we say so.  Second, the strata are not tied: on
+persistent narrowband the fusion reaches $0.998$ [0.994, 1.000] against
+$0.945$ [0.910, 0.972], and a paired image-level permutation test of the
+$\Delta$AUROC on the narrow stratum gives $+0.053$ [+0.027, +0.089],
+one-sided $p<1/2000$.  Third, the deep and industrial families lose their
+narrowband performance almost entirely ($0.869$ and $0.799$), and the wide
+stratum CI of the autoencoder is unstable ($n=126$ images, reported as is).
+
+\begin{table}[!t]
+\centering
+\caption{LOFAR benchmark: overall and per-stratum AUROC with image-level
+95\% CIs ($B=1000$; narrow = persistent 1--3 column RFI vs clean).}
+\label{tab:main}
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{lccc}
+\toprule
+ & overall & narrow & wide \\
+\midrule
+MRD (stage 1)        & 0.724 [.705,.744] & \textbf{0.998 [.995,1.000]} & 1.000 [.999,1.000] \\
+ConvAE               & 0.786 [.759,.814] & 0.869 [.802,.922] & 0.621 [.483,.954] \\
+PatchCore (in-dom.)  & 0.773 [.746,.800] & 0.799 [.732,.857] & 0.875 [.737,.999] \\
+PaDiM (in-dom.)      & 0.753 [.721,.783] & 0.761 [.699,.815] & 0.861 [.724,.992] \\
+SumThreshold (flags) & 0.742 [.716,.767] & 0.911 [.861,.952] & 0.916 [.850,1.000] \\
+SumThreshold (max)   & 0.811 [.786,.837] & 0.945 [.910,.972] & 0.966 [.944,1.000] \\
+max-z fusion         & 0.839 [.822,.856] & 0.998 [.994,1.000] & 1.000 [.999,1.000] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{injection_maps.png}
+\caption{Injection--recovery maps on LOFAR (bottom row) and RSP1 (top row):
+AUROC of injected-vs-base patches over RFI width (rows) and amplitude
+(columns).  Down-arrows mark \emph{anti-correlated} cells
+(AUROC $<0.5$): for the max-normalised SumThreshold statistic a wide,
+moderate line raises its own per-line scale and \emph{suppresses} the
+statistic elsewhere, ranking contaminated patches below clean ones.  MRD and both fusions darken from the weak-narrow corner; the champion
+Fisher3$'$ (second column) additionally covers wide and transient
+morphologies that MRD alone misses (cf.\ $w\ge3$ at $+20$--$50\%$).}
+\label{fig:maps}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_roc_pdpfa.png}
+\caption{Detection probability versus false alarm rate at patch level
+(log $P_{fa}$ axis), full test set (left) and the persistent-narrowband
+stratum (right).  At the operating points $P_{fa}=10^{-2}$/$10^{-3}$ the
+max-z fusion attains $P_d=0.469$/$0.315$ on the full set, and on the
+narrowband stratum the median-based detectors separate cleanly from all
+area-based families throughout the low-false-alarm region.}
+\label{fig:pdpfa}
+\end{figure}
+
+Patch-level $P_d$--$P_{fa}$ curves (Fig.~\ref{fig:pdpfa}) give the
+operating-point view: at $P_{fa}=10^{-2}$ the fusion reaches $P_d=0.47$
+(all patches) and the median-based detectors own the low-$P_{fa}$ region
+of the narrowband panel outright.
+
+\subsection{Injection maps: where each family breaks}
+Fig.~\ref{fig:maps} summarises the width$\times$amplitude grids.  Four
+patterns, each with a mechanism: (i) MRD and the fusion are
+width-insensitive --- temporal aggregation asks whether a column persists,
+not how wide it is --- and cross AUROC $0.7$--$0.9$ at $+20\%$ for every
+width; (ii) the autoencoder and the industrial detectors respond to
+\emph{area}: one-pixel lines are invisible at every amplitude on RSP1
+(AUROC $0.500$), and only wide, strong injections register; (iii) the
+classical flag count needs width but not strength ($w\ge2$, $+50\%$:
+$0.8$--$1.0$; $w=1$: never); (iv) the max-normalised classical statistic is
+\emph{anti-correlated} for wide moderate lines ($0.36$--$0.43$ at $w\ge3$,
+$+20\%$) --- to our knowledge the first quantified instance of this trap.
+
+\subsection{Absorption-like and multi-line injections}
+Negative injections (channel power reduced by 10--50\%) show that MRD and
+the fusion detect absorption-like RFI with the same sensitivity as emission
+($-20\%$: $0.80$--$0.92$), while the autoencoder is blind across the entire
+negative domain ($0.500$ even at $-50\%$).  With $n$ simultaneous one-pixel
+lines the fusion is insensitive to $n$ ($0.90$ at $n=2$, unchanged at
+$n=8$), the autoencoder remains at chance even for eight simultaneous lines,
+and the classical flag count climbs with total area ($0.77\to1.00$) --- the
+third independent confirmation of the complementary-coverage picture.
+
+\subsection{Ablations}
+\label{sec:ablation}
+\textbf{Fusion members} (selection half): max-z two-member $0.834$;
+Fisher three-member with the plain autoencoder $0.865$; with the denoising
+autoencoder (DAE) $0.875$; adding the max-normalised SumThreshold statistic
+\emph{lowers} it to $0.857$.  \textbf{DAE vs AE}: synthetic-RFI denoising
+training alone lifts the autoencoder from $0.767$ to $0.794$ overall
+(transient $+0.030$, wide $+0.046$, narrow $-0.015$).  \textbf{Skip-connection
+AE}: trained on all 9217 clean patches it is better on transients but worse
+on narrowband and does not improve the fusion --- reported as a negative
+result.  \textbf{MRD scale set}: narrowband AUROC is $0.993$--$0.998$ for
+every reasonable scale set; the multi-scale maximum contributes to the other
+strata (overall $0.694\to0.724$).  \textbf{Calibration size}: the zero-label
+protocol saturates with $\sim$100 clean patches (overall within $0.002$ of
+the 4000-patch calibration) --- the data hunger of the method is negligible
+for deployment.  \textbf{Network-engineering knobs}: a ten-variant grid on
+the denoising member (losses L1/Huber/MSE+gradient/MSE+correlation;
+AdamW and $10\times$ lower learning rate; cosine schedules; doubled width;
+a residual refinement block at the bottleneck), each trained on identical
+data order and identical synthetic-RFI draws, moves the member's overall
+AUROC by at most $+0.001$ and $-0.065$ (L1) around the baseline, and the
+best variant inside the full fusion reproduces the confirmation result
+within bootstrap error ($0.912$ [0.896, 0.928] vs $0.914$ [0.898, 0.929]).
+The member is insensitive to standard engineering knobs --- consistent with
+the capacity, skip-connection, and member-search findings above: the
+bottleneck is the aggregation paradigm, not the network.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_forest.png}
+\caption{Overall AUROC on the confirmation half (55 unseen images) with
+image-level bootstrap 95\% CIs; single-member values (grey) are full-test
+points for context.  The Fisher fusions separate from the strongest
+classical baseline; the confirmed champion (Fisher4b) adds the official
+PatchCore stack as a fourth member.}
+\label{fig:forest}
+\end{figure}
+
+\subsection{Confirmation half and the optimised detector}
+\begin{table}[!t]
+\centering
+\caption{Confirmation half (55 unseen LOFAR images, scored once): overall
+AUROC and image-level 95\% CI.}
+\label{tab:confirm}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+ & overall [CI95] & narrow \\
+\midrule
+ST-max (reference) & 0.824 [0.790, 0.854] & 0.974 \\
+max-z fusion       & 0.859 [0.833, 0.881] & \textbf{1.000} \\
+Fisher3 (MRD+AE+ST-flags) & 0.873 [0.849, 0.896] & 0.995 \\
+Fisher3$'$ (MRD+DAE+ST-flags) & 0.889 [0.865, 0.909] & 0.996 \\
+Fisher4b (+official PC) & \textbf{0.914} [0.898, 0.929] & 0.997 \\
+\bottomrule
+\end{tabular}
+\end{table}
+Table~\ref{tab:confirm} and Fig.~\ref{fig:forest}: the three-member
+Fisher fusion separates from the strongest classical baseline
+(0.889 [0.865, 0.909] vs 0.824 [0.790, 0.854]).  The narrowband-optimal
+configuration remains the two-member max-z fusion (stratum $1.000$ on the
+confirmation half); we report both and note the trade-off explicitly ---
+Fisher combination buys overall and transient performance at a negligible
+narrowband cost ($0.996$ vs $1.000$).  A fourth member closes the arc: once
+The confirmation split is by dataset order (parent image = $i\,/\!/225$;
+109 images split into first-half selection and second-half confirmation;
+positive patches 4008 vs 4500), and on the full first-generation test set
+the fusion's advantage over the strongest classical baseline is
+significant under a paired per-image permutation test (mean
+$\Delta$AUROC $+0.044$, $p=5\times10^{-4}$, $B{=}2000$).
+A fourth member closes the arc: once
+strongest single baseline (Section~\ref{sec:migration}), its own scores
+enter the same clean-data Fisher combination --- the confirmation half
+rises to $0.914$ [0.898, 0.929] with every stratum at or above $0.997$
+except transient ($0.900$), and its lower CI bound clears the classical
+baseline's upper bound.  The strongest-baseline-becomes-a-member pattern
+now applies to both the classical (flag counts) and the industrial
+(PatchCore) families. (The label \emph{max-z} denotes two related two-member variants across the selection-half and confirmation-half tables --- AE-max and AE-top16 respectively --- and the archived first-generation scores used for the paired test are not score-normalisation interchangeable with the re-run confirmation generation; both are released.)
+
+\subsection{Runtime}
+On 20 CPU threads, per $64\times64$ patch: ConvAE $0.37$\,ms, PaDiM $0.65$,
+MRD $3.87$, max-z fusion $4.13$, PatchCore $4.79$, SumThreshold $31.18$.
+The complete two-stage system is $7.5\times$ faster than the classical
+pipeline while dominating it on the strata that matter for spectrometry.
+
+\subsection{Third dataset (HERA): the boundary of the persistence assumption}
+\label{sec:hera}
+On the public HERA simulation corpus (280 labelled $512^2$ test images,
+complex visibilities converted to power, RFI in 96\% of test patches ---
+a fundamentally different regime from LOFAR's 33\%), the picture changes
+qualitatively: no detector exceeds AUROC $0.68$ (tuned SumThreshold max
+$0.676$; the fusion $0.649$; MRD $0.545$, narrow stratum $0.630$; all
+members re-calibrated on HERA clean training data only).  The mechanism is
+the mirror image of Section~V-B: when the interferer persists across the
+\emph{entire} analysis window, the temporal median absorbs it into the
+baseline and time aggregation carries no information --- only frequency-domain
+contrast retains power.  This is not a failure of the method but the
+quantitative boundary of its applicability: the coverage claim of this
+paper holds for interferers that occupy \emph{less than the analysis
+window} (the persistent stratum is defined at $>60\%$ occupancy); HERA's
+simulation places most of its RFI outside that scope, and we report it as
+such.  Two consistent observations remain: the denoising autoencoder
+retrained in-domain beats the zero-shot transfer ($0.634$ vs $0.598$), and
+no family dominates.
+
+\subsection{Migration study: industrial anomaly detection}
+\label{sec:migration}
+The obvious modernisation --- treat RFI patch screening as industrial
+anomaly detection --- was implemented and tested rather than assumed, at
+three fidelity levels: our in-domain reimplementation (native $64{\times}64$,
+overall $0.773$, narrow stratum $0.799$), the published ImageNet backbone at
+native resolution ($0.666$; the domain gap), and finally the \emph{official}
+anomalib PatchCore pipeline with its default preprocessing.  The official
+stack upsamples every patch to $256{\times}256$ before the WideResNet-50
+feature extractor --- and this changes the verdict: on a balanced
+2000-patch subset (1000 RFI, 1000 clean; strata scored on identical
+indices for all methods) it reaches overall $0.855$ with narrowband
+$0.960$ (n=67), transient $0.838$, wide $0.936$.  A controlled decomposition falsifies our first guess at the
+mechanism: with the same WRN50 backbone and the same
+random-subsample memory bank, varying \emph{only} the input resolution
+leaves the narrowband stratum unchanged ($0.779$ at $64$\,px native vs
+$0.773$ at $256$\,px; overall $0.66\to0.71$).  The official stack's
+narrowband capability comes from its \emph{fully-provisioned memory
+bank} --- greedy coreset selection and neighbourhood reweighting --- not
+from resolution.  The receptive-field-dilution blindness we report
+therefore applies to simplified bank protocols (our reimplementation
+arms), and the benchmark narrowband gap to our detectors narrows to
+$0.96$ vs $0.99$ against the full official stack.
+
+On the same balanced subset our detectors score: Fisher3$'$ $0.881$
+(narrow $0.989$), max-z fusion $0.844$ ($0.999$), MRD $0.725$ ($0.999$),
+ConvAE $0.790$ ($0.872$), SumThreshold max $0.808$ ($0.933$).  The
+official implementation is thus genuinely competitive --- the strongest
+single-model baseline in this paper --- and our advantage concentrates
+exactly where the diagnosis predicts: sub-upsampling-contrast narrowband
+($0.99$ vs $0.96$), zero-label deployment at native resolution, and CPU
+runtime ($4.1$\,ms/patch at $64^2$ pixels versus a $256^2$ pipeline).
+
+The \emph{most recent} published method replicates the same story.  RFI-HWT
+(You et al., A\&A 701, A81, 2025 --- multilevel 2-D wavelet transform plus a
+DnCNN denoiser per wavelet level) was executed from the authors' released
+code and pretrained weights (three disclosed adaptations: the pulsar-FITS
+wrapper bypassed, a released off-by-one in the inverse wavelet loop
+restricted to the denoised levels, DataParallel prefix stripping; and a
+fidelity note that $64{\times}64$ patches sit below the method's design
+window, level-3 db8 coefficients being boundary-affected).  On the identical
+balanced subset it is the strongest single-model baseline overall
+($0.864$; narrow $0.877$) --- yet on the real instrument its one-pixel
+injection ladder is chance at every contrast (AUROC $0.499$--$0.509$ at
+$+10$--$100\%$), the third independent state-of-the-art method to confirm
+that nothing bank- or denoiser-based survives the cross-instrument transfer
+that the median-based stage handles with minutes of on-site quiet data.
+One reproducibility note: the official loader assumes 8-bit imagery; our
+first export in 16-bit saturated silently to AUROC $0.482$ --- a
+cross-framework pitfall worth documenting.
+
+\subsection{Real-instrument validation on RSP1}
+\label{sec:rsp1val}
+Applied to 600\,s RSP1 integrations, the MRD stage blindly discovers a
+deterministic comb: 81 peaks at $z>5$ with best spacing $1086$ bins
+$=66.28$\,kHz ($=2\times33.14$\,kHz, the Hann-FFT bin spacing of the
+waterfall chain), autocorrelation $0.666$ ($10^{4}$-permutation and 64-channel-block-permutation
+nulls both $p<1\mathrm{e}{-4}$, null p95 $0.113$/$0.114$); 22 of the 81 peaks sit
+within $0.06$ of the comb lattice and carry $1.6\times$ the off-lattice mean
+significance, and the comb is specific to the coherent chain --- absent in all
+five independent incoherent-waterfall captures ($|{ac}|<0.006$ at the expected
+lag).  Injected one-pixel lines are
+ranked by the median-based stage with AUROC $0.57$ ($+5\%$) and $0.73$
+($+10\%$), rising to $0.97$--$1.00$ at $+50$--$100\%$ after on-instrument
+self-calibration of the fused members, while the
+autoencoder, PatchCore, and PaDiM remain at chance at every amplitude and
+the classical statistic transitions only at $+50\%$
+(Fig.~\ref{fig:maps}, top row), and --- decisively --- the \emph{official}
+anomalib PatchCore stack itself, deployed as-is with its LOFAR-trained
+memory bank, scores AUROC $0.500$ on the same one-pixel ladder at every
+amplitude from $+10\%$ to $+100\%$: the memory bank does not transfer
+across instruments, whereas the median-based stage re-calibrates from
+minutes of on-instrument quiet data (Section~V-G).  The instrument is thus both the stress test
+and the demonstration that the pipeline finds real artefacts end to end.  The fused detector itself, calibrated on LOFAR-clean data and
+applied cross-domain, inherits the weak-narrow corner and adds wide
+coverage ($w{=}5$, $+20\%$: AUROC $0.94$ vs $0.83$ for MRD alone), but the
+domain-shifted DAE member dilutes extreme narrowband ranking
+($w{=}1$, $+100\%$: $0.85$ vs $0.96$); re-calibrating the members on the
+instrument's own quiet data (249 patches, still label-free) recovers
+$0.97$ and a $100\%$ detection rate at $+100\%$ while remaining at the
+5\%-false-alarm operating point.  On-instrument self-calibration is
+therefore the recommended deployment mode; adding the official-PatchCore
+member (Fisher4b) leaves this ladder essentially unchanged
+($0.72/0.82/0.84/0.85$ cross-domain and $0.64/0.82/0.89/0.97$ with
+self-calibration at $+10$--$100\%$), confirming that the real-instrument
+behaviour is carried by the median-based and denoising members, not by the
+bank.
+
+The newest zero-label paradigm --- promptable foundation-model segmentation
+\cite{yang2025sam} --- fails the same transfer test.  On a fixed 64-patch
+subsample of the identical injection ladder, the Segment Anything Model
+(ViT-B) with automatic mask generation, scored blindly by the sharpest
+per-channel spike among its output masks, ranks at chance to weak at every
+contrast (AUROC $0.57/0.69/0.67$ at $+10/50/100\%$; $0\%$ detection at the
+$5\%$-false-alarm operating point), while the median-based member on the
+same patches scores $0.75/0.97/1.00$.  A point prompt placed on the injected channel anchors a dedicated line mask
+only when the line is glaring: coverage at the line is $+1.00$ at $+100\%$
+(dedicated strip in $32/32$ scans) but $+0.00$ at $+10\%$ --- and knowing
+where to prompt presupposes the detection under test.  The blind path ---
+the only zero-label deployment --- remains at chance at every amplitude.
+Object priors without temporal persistence do not survive the
+cross-instrument transfer in the mode that deployment requires; the oracle
+mode is an answer-key check, not a detector.  The failure is
+representational, not informational: re-rendering the aggregate-first
+column-$z$ profile as a bar image lets the same model isolate the injected
+line blindly (narrow-mask yield $0.88$--$0.95$; readout AUROC
+$0.63/0.80/0.83$ at $+10/50/100\%$, up from $0.57/0.69/0.67$ on raw
+patches) --- yet the readout remains strictly below the max-$|z|$ ceiling
+of the very profile it consumes ($0.73/0.96/0.99$) at every amplitude.
+Aggregation owns the information; the foundation model can only visualise
+it.
+
+\textbf{Transfer to an independent educational instrument.}  The suite also
+transfers, zero-retuned, to a third-party educational horn-SDR corpus: 11
+single-sweep galactic scans following the two-load protocol of Mhaske et
+al.~\cite{mhaske2022}.  Single sweeps are the documented degenerate class
+for per-scan statistics --- the spectra are signal-dominated smooth
+products whose monotone runs zero the median-of-three noise estimator ---
+and the survey-standard fix, cross-scan common-mode rejection (the
+per-channel median across the 11 scans), resolves it:  the corpus's known
+RFI birdie ($-168.6$\,km/s, $l=5$ scan) is the largest scan-unique feature
+($10.7\sigma$; leave-one-out $10.8\sigma$), while the instrumental
+structure that dominates per-scan statistics ($17$--$40\sigma$) collapses
+below $4\sigma$ by construction.  Aggregation owns the detection here too
+--- across scans rather than across time.
+
+\section{Discussion}
+\subsection{Improvements over the replicated baselines}
+\label{sec:improve}
+The three baseline families were not taken from leaderboards but
+\emph{replicated}: SumThreshold from its published equations
+\cite{offringa2010}, the RFI-NLN autoencoder pipeline executed end-to-end
+from the authors' original code on the same public pickle (reduced scale:
+750 of 7465 training images, 10 of 100 epochs, CPU-only; pixel AUROC
+$0.771$ vs their published $0.840$ at full scale, with the deviation
+disclosed), and PatchCore/PaDiM from their published recipes including the
+original backbone.  Replication at this level is what licenses the
+improvement claims below: the baselines keep their published
+hyperparameters and our gains are measured against what their methods
+actually do, not against tuned variants.
+
+\emph{Versus RFI-NLN.}  The replicated pipeline is faithful, and its
+blind spot is structural: a strided encoder averages a one-pixel line away
+at the first level, so no amount of latent-neighbour refinement (their NLN
+scoring) can recover a feature the encoder never represented --- on our
+injection grid the AE family sits at AUROC $0.500$ for one-pixel lines at
+every contrast.  Three changes, all label-free: (i) a temporal-median
+member that aggregates along time \emph{before} any pooling, restoring
+exactly the persistence information the encoder destroys (narrowband
+stratum $0.998$ vs $0.869$); (ii) the deep member retrained as a denoiser
+with synthetic RFI of matched morphology rather than as a pure
+reconstruction autoencoder ($+0.027$ overall on the same benchmark); and
+(iii) top-$k$ rather than max patch aggregation, which buys area-robustness
+($+0.015$).  The reduced-scale replication also showed the direction is
+robust: even at $1/10$ of the training budget the AE family never
+approaches the fusion on the narrow stratum.
+
+\emph{Versus SumThreshold.}  We changed the algorithm not at all --- we
+demoted it.  As a standalone detector its shared threshold ladder floors
+persistent sub-threshold lines (chance-level ranking below $+50\%$
+contrast) and its max-normalised statistic \emph{anti-correlates} for wide
+moderate lines ($0.36$--$0.43$).  Inside the Fisher fusion, however, its
+flag count contributes exactly the area sensitivity that the median-based
+members lack ($w\ge2$ lines at $+50\%$: $0.8$--$1.0$ where MRD alone
+transfers less), and the clean-data p-value transform absorbs its
+per-member miscalibration.  The lesson is architectural: the classical
+workhorse is most valuable as a \emph{member}, not as the detector.
+
+\emph{Versus PatchCore/PaDiM.}  With the published backbone the
+ImageNet$\to$spectrogram domain gap costs $0.11$ AUROC; with in-domain
+features the gap closes but one-pixel injections remain at chance on the
+real instrument --- receptive fields dilute what a $32\times32$ crop of
+columns concentrates \emph{under simplified bank protocols}; the
+fully-provisioned official stack recovers most of the benchmark gap
+(Section~\ref{sec:migration}) yet does not transfer to the real
+instrument at any contrast --- exactly where temporal aggregation,
+which needs no bank at all, wins.  The improvement here is not a better memory bank
+but an earlier stage: temporal aggregation \emph{before} patch embedding.
+Equivalently: the memory-bank family should be applied to
+time-aggregated residuals, not to raw spectrograms --- a prescription that
+follows directly from the diagnosis and is testable on any industrial-AD
+stack.
+
+The common denominator of all three replications is that every member
+computes statistics without aggregation along the time axis.  The two-stage
+design is therefore not one more family but a re-ordering: aggregate first,
+then apply each family where its inductive bias matches the morphology.
+
+\subsection{One mechanism, five families}
+Every failure documented here is a corollary of a single statement: a
+statistic that does not aggregate along the time axis carries no information
+about persistence, and a persistent line below the multiple-testing floor is
+indistinguishable from noise per sample.  The deep family fails through
+stride averaging, the classical family through its shared threshold ladder,
+the industrial family through receptive-field dilution, the foundation-model
+family through object priors that carry no temporal persistence
+(Section~\ref{sec:rsp1val}) --- and a 1960s-vintage
+time median succeeds.  For spectrometry, where narrowband carriers are the
+dominant morphology, this ordering \emph{reverses} the usual deep-versus-
+classical narrative.
+
+\subsection{A floor theorem for threshold ladders}
+\label{sec:floor}
+The mechanism can be stated exactly.  Let $R(\nu,t)$, $\nu{=}1..F$,
+$t{=}1..T$, be i.i.d. $\mathcal{N}(0,\sigma^2)$ samples and let one channel
+$\nu_0$ carry a persistent line of amplitude $\delta$,
+$R(\nu_0,t)=\delta+\text{noise}$.  A threshold-ladder detector flags windows
+of size $M$ along $t$ when the window mean exceeds
+$\chi_1\,\rho^{-\log_2 M}\sigma$ ($\rho>1$ fixed, Offringa's Eq.~12), where
+$\chi_1$ is calibrated for a patch-level false alarm $\alpha$ over the
+$F\cdot T$ single-sample tests.
+
+\emph{Proposition 1 (ladder floor).}  (i) $\chi_1 \ge
+\Phi^{-1}(1-\alpha/2FT) \sim \sigma\sqrt{2\ln(FT/\alpha)}$.  (ii) For a
+persistent line the optimal ladder window is $M{=}T$ (window means all
+estimate $\delta$ regardless of $M$, while $\chi_M$ decreases with $M$), so
+the ladder detects iff
+\begin{equation}
+\delta \;\ge\; \delta^{\mathrm{ST}}_{\min}
+ \;=\; \chi_1\,\sigma\,\rho^{-\log_2 T}
+ \;\sim\; \sigma\sqrt{2\ln(FT/\alpha)}\;T^{-\log_2\rho}.
+\label{eq:floor}
+\end{equation}
+(iii) The time-median statistic of the line channel is
+$\delta + O(\sigma/\sqrt{T})$ (Gaussian efficiency $1.2533$), and the
+$\max$ over $F$ null channels is $\sim\sigma\sqrt{2\ln F}/\sqrt{T}$, so the
+median detects iff
+\begin{equation}
+\delta \;\ge\; \delta^{\mathrm{MRD}}_{\min}
+ \;\sim\; \sigma\sqrt{2\ln F / T}.
+\label{eq:mrd}
+\end{equation}
+(iv) The ratio $\delta^{\mathrm{ST}}_{\min}/\delta^{\mathrm{MRD}}_{\min}
+\sim \sqrt{T}\,T^{\log_2\rho}\cdot\mathrm{const} \to \infty$: the ladder's
+false-alarm floor, set at $M{=}1$, consumes exactly the $\sqrt{T}$
+integration that the median realises.  The same floor applies to
+\emph{any} per-sample or per-position statistic --- including strided
+network features --- because none of them escapes the $F\cdot T$
+multiple-testing burden; temporal aggregation is the only escape.
+
+\emph{Proof sketch.}  (i) Union bound over $FT$ Gaussian tests.  (ii) Every
+window mean of the line channel estimates $\delta$ with noise
+$\sigma/\sqrt{M} \le \sigma$, so the binding constraint is the threshold,
+minimised at $M{=}T$.  (iii) Median concentration plus the union bound over
+$F$ channels.  (iv) Direct quotient of
+\eqref{eq:floor} and \eqref{eq:mrd}.  \hfill$\square$
+
+\emph{Numerical instantiation.}  With $T{=}F{=}64$, $\rho{=}1.5$,
+$\alpha{=}10^{-3}$, and the measured per-sample log-noise
+$\sigma\!\approx\!0.5$: Proposition~1 predicts
+$\delta^{\mathrm{ST}}_{\min}\!\approx\!12.8/11.4\!\approx\!1.12\,\sigma$
+--- i.e., the classical ladder turns on between $+50\%$ ($0.81\sigma$) and
+$100\%$ ($1.38\sigma$) --- and
+$\delta^{\mathrm{MRD}}_{\min}\!approx\!0.21\sigma$ --- with
+$F_{\mathrm{eff}}\!approx\!4$, the number of independent sign-runs of the
+double-median residual over a 64-channel window (the residual vanishes
+identically on monotone runs; a naive $F{=}64$ over-counts and would give
+$0.36\sigma$) --- turning on below
+$10\%$ ($0.14\sigma$): exactly the measured injection turning points of
+Fig.~\ref{fig:maps}.  The theorem also explains why the DAE and
+PatchCore-style members remain at chance on the same injections
+(Section~\ref{sec:migration}): stride and receptive-field statistics are
+per-position statistics and inherit the same $F\cdot T$ floor, whereas the
+temporal-median member is the only one whose effective sample size grows
+A three-working-point scan of the threshold multiplier ($\chi_1\times0.5/1/2$ around the calibrated value) confirms the floor's $\chi_1$ dependence empirically: one-pixel AUROC at $+100\%$ degrades monotonically $0.93/0.86/0.65$, and no working point turns on below $+50\%$ --- the deployed $\chi_1$ is the calibrated one, not a weakened one.
+with $T$.
+
+\subsection{Design guidance for low-cost spectrometers}
+(i) Aggregate along time before anything else; (ii) if a deep stage is
+desired, train it as a denoiser with synthetic morphology --- it costs
+minutes on CPU and needs no labels; (iii) combine members by clean-data
+Fisher p-values rather than score maxima; (iv) never trust a single
+max-normalised statistic for wide weak interferers (the anti-correlation
+trap); (v) validate with injection maps, not with a single pooled number.
+
+\subsection{Limitations}
+The SumThreshold baseline implements the plain published variant without the
+authors' flag-exclusion refinement; the HERA corpus bounds the method's
+applicability to sub-window persistent interferers
+(Section~\ref{sec:hera}); RSP1 provides one real instrument, single
+polarisation; the DAE's synthetic morphology is defined by the authors and
+could be expanded; the foundation-model arm is single-scale (ViT-B) and
+real-instrument-only; and the anti-multiplicity discipline relies on a single
+pre-registered confirmation split.
+
+\section{Conclusion}
+Weak persistent narrowband interference --- the morphology that matters most
+for hydrogen-line spectrometry --- is invisible to deep, classical, and
+industrial detector families alike, each for a different structural reason
+that injection maps make directly measurable.  A label-free
+Fisher fusion whose members own the disjoint blind regions recovers it:
+with the official PatchCore stack as a calibrated fourth member,
+$0.997$ AUROC on persistent narrowband, overall $0.914$ [0.898, 0.929] on
+held-out images
+with CI separation from the strongest classical baseline, blind comb
+discovery and injection recovery on a real EUR~200 instrument, at
+$7.5\times$ the speed of the classical pipeline.  The protocol --- stratified
+injection maps, cluster-bootstrap CIs, selection/confirmation discipline ---
+is instrument-agnostic and released for reuse.
+
+\section*{Acknowledgment}
+% TODO[1]
+The author thanks the RFI-NLN authors for the public LOFAR dataset and
+labelled masks.
+
+\section*{Code and Data Availability}
+All experiments run on public data: the LOFAR and HERA benchmark
+(Zenodo record 8275061), the LAB survey cube, and the community
+corpora listed in the paper, each with their original licences.  The
+detector suite (MRD, denoising AE, SumThreshold reference
+implementation, PatchCore/PaDiM arms, fusion, evaluation protocol),
+the reduced-scale runner for the original RFI-NLN code (with the four
+disclosed compatibility patches), the anomalib export harness, and
+every result file behind each table and figure (JSON with
+machine-readable provenance) are archived at
+\texttt{[repository DOI upon acceptance]}.  The RSP1 raw IQ files are
+available from the author on reasonable request (instrument-owner
+data).
+
+\begin{thebibliography}{99}
+\bibitem{offringa2010} A.~R. Offringa \emph{et al.}, ``Post-correlation
+radio frequency interference classification methods,'' \emph{MNRAS},
+vol.~405, no.~1, pp.~155--167, 2010, doi:10.1111/j.1365-2966.2010.16471.x.
+\bibitem{offringa2012} A.~R. Offringa \emph{et al.}, ``The LOFAR radio
+environment,'' \emph{A\&A}, vol.~549, A11, 2012, doi:10.1051/0004-6361/201220293.
+\bibitem{offringa2013} A.~R. Offringa, ``The SumThreshold method: technical
+details,'' technical report, 2013. [Online]. Available:
+\url{https://andreoffringa.org/pdfs/SumThreshold-technical-report.pdf}
+\bibitem{akeret2017} J.~Akeret \emph{et al.}, ``Radio frequency interference
+mitigation using deep convolutional neural networks,'' \emph{Astronomy and
+Computing}, vol.~18, pp.~35--39, 2017, arXiv:1609.09077.
+\bibitem{vafaieisadr2020} S.~Vafaei Sadr \emph{et al.}, ``Deep learning
+improves identification of radio frequency interference,'' \emph{MNRAS},
+vol.~499, pp.~379--390, 2020, doi:10.1093/mnras/staa2724.
+\bibitem{mesarcik2022} M.~Mesarcik \emph{et al.}, ``Learning to detect
+radio frequency interference in radio astronomy without seeing it,''
+\emph{MNRAS}, vol.~516, pp.~5367--5378, 2022, doi:10.1093/mnras/stac2503.
+\bibitem{mesarcik2023} M.~Mesarcik \emph{et al.}, ``The ROAD to discovery:
+machine-learning-driven anomaly detection in radio astronomy
+spectrograms,'' \emph{A\&A}, vol.~680, A74, 2023,
+doi:10.1051/0004-6361/202347182.
+\bibitem{dutoit2024} C.~Du Toit \emph{et al.}, ``A comparison framework for
+deep-learning-based RFI detection,'' \emph{MNRAS}, vol.~530, pp.~613--627,
+2024.
+\bibitem{pritchard2024} D.~Pritchard, A.~Wicenec, M.~Bennamoun, and
+S.~Dodson, ``RFI detection with spiking neural networks,'' \emph{PASA},
+vol.~41, e028, 2024, doi:10.1017/pasa.2024.27.
+\bibitem{rfihwt2025} Z.-Y. You \emph{et al.}, ``RFI-HWT: hybrid deep-learning
+algorithm for advanced RFI mitigation in radio astronomy,'' \emph{A\&A},
+vol.~701, A81, 2025.
+\bibitem{he2025} J.~He, Y.~Li, and X.~Chen, ``A review of software-based
+detection and mitigation techniques for radio frequency interference,''
+\emph{Astronomical Techniques and Instruments}, vol.~3, pp.~312--336, 2025,
+doi:10.3724/ati2025048.
+\bibitem{roth2022} K.~Roth, L.~Pemula, J.~Zepeda, B.~Sch\"olkopf,
+T.~Brox, and P.~Gehler, ``Towards total recall in industrial anomaly
+detection (PatchCore),'' in \emph{Proc.~IEEE/CVF CVPR}, 2022, pp.~14298--14308,
+doi:10.1109/CVPR52688.2022.01392.
+\bibitem{defard2021} T.~Defard, A.~Setkov, A.~Loesch, and R.~Audigier,
+``PaDiM: a patch distribution modeling framework for anomaly detection
+and localization,'' in \emph{Proc.~ICPR Int.\ Workshops (LNCS)}, 2021,
+pp.~475--489, doi:10.1007/978-3-030-68799-1\_35.
+\bibitem{saraos2026} C.~H.~A. Saraos, K.~M. Senados, and E.~N. Hamoy,
+``Low-cost 21\,cm hydrogen-line detection for physics education using
+software-defined radio and a simple antenna,'' \emph{Phys.\ Educ.},
+vol.~61, 045025, 2026, doi:10.1088/1361-6552/ae806b.
+\bibitem{pnu2025} A.~Allawi \emph{et al.}, ``Design and optimization of a
+low-cost 5-m radio telescope at Princess Nourah University (PNU), Saudi
+Arabia,'' \emph{Radio Science}, vol.~60, no.~2, e2024RS008170, 2025,
+doi:10.1029/2024RS008170.
+\bibitem{phelps2024} C.~Phelps, ``Galactic neutral hydrogen structures
+spectroscopy and kinematics: designing a home radio telescope for 21\,cm
+emission,'' arXiv:2411.00057, 2024 (unpublished preprint).
+\bibitem{connor2019} E.~F. Keane and C.~R.~H. Walker, ``Fast radio burst
+injection tests,'' arXiv:1907.07948, 2019.
+\bibitem{haynes2018} M.~P. Haynes \emph{et al.}, ``The Arecibo Legacy Fast
+ALFA survey: the ALFALFA extragalactic H\,I source catalog,''
+\emph{ApJ}, vol.~861, no.~1, art.~49, 2018, doi:10.3847/1538-4357/aac956.
+\bibitem{yang2025sam} Y.~Yang, F.~Zhao, R.~Liang, Q.~Guo, J.~Gu, Y.~Huang,
+and Y.~Yu, ``Performance of the segment anything model in various
+RFI/events detection in radio astronomy,'' \emph{Publ. Astron. Soc. Aust.},
+vol.~42, e019, 2025, doi:10.1017/pasa.2024.128.
+\bibitem{mhaske2022} A.~A. Mhaske, J.~Bagchi, B.~C. Joshi, J.~Jacob, and
+P.~K. T., ``A Bose horn antenna radio telescope (BHARAT) design for 21 cm
+hydrogen line experiments for radio astronomy teaching,''
+\emph{Am. J. Phys.}, vol.~90, no.~12, pp.~948--956, 2022,
+doi:10.1119/5.0065381.
+\end{thebibliography}
+
+\end{document}

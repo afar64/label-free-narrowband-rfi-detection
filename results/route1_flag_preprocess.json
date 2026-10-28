@@ -1,0 +1,41 @@
+{
+ "pictor": {
+  "n_rows": 2048,
+  "flagged_fraction": 0.0078125,
+  "notch_in_mask": true,
+  "audit": {
+   "snr_local": 5.0,
+   "flag_fraction_on_line": 0.0,
+   "peak_ratio_clean": 95387.31210100203,
+   "fwhm_inj": 20.28165647060652,
+   "fwhm_rec": 1.4840236441907138,
+   "area_ratio_clean": 11894.988445130357
+  }
+ },
+ "adhyanthac": {
+  "n_rows": 91,
+  "flagged_fraction": 0.0,
+  "flagged_fraction_z4": 0.0,
+  "audit": {
+   "snr_local": 5.0,
+   "flag_fraction_on_line": 0.0,
+   "peak_ratio_clean": 0.9997336332091994,
+   "fwhm_inj": 0.0,
+   "fwhm_rec": 0.0,
+   "area_ratio_clean": null
+  }
+ },
+ "rsp1_aql": {
+  "n_rows": 600,
+  "flagged_fraction": 0.017578125,
+  "audit": {
+   "snr_local": 5.0,
+   "flag_fraction_on_line": 0.020618556701030927,
+   "peak_ratio_clean": 1.0000061250681598,
+   "fwhm_inj": 7.007889432051876,
+   "fwhm_rec": 7.007889432051876,
+   "area_ratio_clean": 0.9999998230070851
+  }
+ },
+ "runtime_s": 2.019496440887451
+}

@@ -1,0 +1,114 @@
+{
+ "line": {
+  "f1_amplitude_power": 16508362752.0
+ },
+ "scenarios": {
+  "S1_f0.1": {
+   "n_on": 1,
+   "peak_z_M1": 5.6108587202895635,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 0.6333333333333333,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 27.954317733361307,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S2_stack5_f0.1": {
+   "n_on": 5,
+   "peak_z_M1": 8.2259818200687,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 29.75049324695363,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S3_nod6_f0.1": {
+   "n_on": 3,
+   "peak_z_M1": 6.622940495762566,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 0.9583333333333334,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 28.73178970035767,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S1_f0.3": {
+   "n_on": 1,
+   "peak_z_M1": 9.270697793418616,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 30.19129533433827,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S2_stack5_f0.3": {
+   "n_on": 5,
+   "peak_z_M1": 16.011620838795384,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 33.23538688910496,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S3_nod6_f0.3": {
+   "n_on": 3,
+   "peak_z_M1": 13.168220867614414,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 32.768126784460726,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S1_f1.0": {
+   "n_on": 1,
+   "peak_z_M1": 16.58040950028522,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 32.53865867617212,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S2_stack5_f1.0": {
+   "n_on": 5,
+   "peak_z_M1": 22.642496658904605,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 36.39653601847581,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S3_nod6_f1.0": {
+   "n_on": 3,
+   "peak_z_M1": 20.132361845203928,
+   "M1_noant_p99": 3.289088753436792,
+   "M2_line_median": 1.0,
+   "M2_noant_p99": 0.04666666666666667,
+   "FUS_line_median": 35.92911170158745,
+   "FUS_noant_p99": 19.19546307828238,
+   "detected": true
+  },
+  "S4_rfi_raw": {
+   "peak_z_M1": 16.536187483515913,
+   "detected": true,
+   "note": "before flagging; Route-1 audit guarantees line survival through flagging"
+  }
+ },
+ "hot_cold": {
+  "assumed_loads_K": [
+   300,
+   10
+  ],
+  "count_noise_per_spectrum_frac": 0.003576844973563838,
+  "absolute_scale_frac_error_after_hotcold": 0.0005058422672120015,
+  "note": "replaces the +/-20-30% cross-epoch amplitude problem with a load-referenced scale (the November fix)"
+ },
+ "verdict": {
+  "pre_registered": "November: with 5x600s + nodding, the transposed fusion detects the line at >=5 sigma per member M1; flagging preserves the line (Route-1 audit); hot/cold fixes the absolute scale to 0.1%"
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "config": {
+  "implementation": "anomalib 2.7.0 official Patchcore",
+  "data": "LOFAR patches 8-bit export (v2; v1 16-bit saturated in anomalib loader -> AUROC 0.482 inconclusive)",
+  "labels": "patch positive if any RFI pixel (same as paper)"
+ },
+ "metrics": {
+  "image_AUROC": 0.8539159893989563,
+  "image_F1Score": 0.7640692591667175
+ },
+ "runtime_s": 6340.6
+}

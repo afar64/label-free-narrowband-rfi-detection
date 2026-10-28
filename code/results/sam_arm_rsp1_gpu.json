@@ -1,0 +1,65 @@
+{
+ "seed": 2026,
+ "n_sub": 64,
+ "amps": [
+  0.1,
+  0.5,
+  1.0
+ ],
+ "sam": {
+  "clean_masks_mean": 145.453125,
+  "clean_thin_yield": 1.0,
+  "thr_p95": 1.0,
+  "per_amp": {
+   "0.10": {
+    "auroc": 0.56787109375,
+    "det_at_p95": 0.0,
+    "masks_mean": 143.28125,
+    "thin_yield": 1.0
+   },
+   "0.50": {
+    "auroc": 0.688720703125,
+    "det_at_p95": 0.0,
+    "masks_mean": 130.328125,
+    "thin_yield": 1.0
+   },
+   "1.00": {
+    "auroc": 0.667236328125,
+    "det_at_p95": 0.0,
+    "masks_mean": 91.46875,
+    "thin_yield": 1.0
+   }
+  }
+ },
+ "mrd": {
+  "thr_p95": 40.229251861572266,
+  "per_amp": {
+   "0.10": {
+    "auroc": 0.751953125,
+    "det_at_p95": 0.046875
+   },
+   "0.50": {
+    "auroc": 0.96826171875,
+    "det_at_p95": 0.984375
+   },
+   "1.00": {
+    "auroc": 0.99951171875,
+    "det_at_p95": 1.0
+   }
+  }
+ },
+ "oracle": {
+  "0.10": {
+   "median_cov": 0.0,
+   "mean_cov": 0.043212890625,
+   "dedicated_strip_rate": 0.03125,
+   "n": 32
+  },
+  "1.00": {
+   "median_cov": 1.0,
+   "mean_cov": 0.99755859375,
+   "dedicated_strip_rate": 1.0,
+   "n": 32
+  }
+ }
+}

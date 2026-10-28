@@ -1,0 +1,14 @@
+{
+ "n_files": 7,
+ "single_file_flagged_fraction": 0.8966,
+ "sanitized_stacked_flagged_fraction": 0.0371,
+ "stacked_max_abs_z_alive": 29.0,
+ "best_fold": {
+  "ratio": 3.67,
+  "spacing_bins": 12.65,
+  "spacing_kHz": 24.71
+ },
+ "known_comb_kHz": 32.82,
+ "interpretation": "single files are RFI-saturated (90% flagged, dead-channel log pathology); robust median stacking + dead-channel exclusion restores a normal 3.7% flag rate - the flagging pipeline degrades gracefully on the worst corpus. The 32.82 kHz comb does NOT survive naive channel-space stacking (per-session tuner phase slip smears it); its authority remains the authors' per-session analysis.",
+ "verdict": "graceful-degradation positive; comb requires frequency-aligned cross-session stacking (future work)"
+}
