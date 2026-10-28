@@ -194,7 +194,7 @@ number hides exactly the failures this paper is about
 \subsection{The RSP1 instrument}
 RSP1 is a EUR~200-class single-dish spectrometer: an SDRplay RSP1
 zero-IF receiver (2 or 4\,MS/s dual chain, 59\,dB manual gain, no AGC)
-fed by a commercial mesh dish (aperture 1.2--1.5\,m at 1420\,MHz) with no
+fed by a segmented parabolic grid antenna (Shenglutong SHRNGLUTONG1.4PW1420: 0.9$\times$0.6\,m aperture, aluminium ribs, copper dipole feed, vertical linear polarisation; vendor beamwidths 10$^\circ$/14$^\circ$, gain quoted as 30\,dBi but see the beamwidth reconciliation in the text) with no
 front-end filter or additional LNA, operated from an urban site in Guilin,
 China ($25.32^\circ$N, $110.41^\circ$E, 198\,m).  The tuner is offset
 $+500$\,kHz from the line rest frequency to keep the hydrogen line away from
@@ -210,7 +210,7 @@ as-deployed; the dish aperture bracket spans the vendor's stated range.}
 \footnotesize
 \begin{tabular}{ll}
 \toprule
-antenna & commercial mesh dish, 1.2--1.5\,m aperture @ 1420\,MHz \\
+antenna & segmented parabolic grid (Shenglutong SHRNGLUTONG1.4PW1420), 0.9$\times$0.6\,m aperture, aluminium ribs, copper dipole feed, N-female; vendor: 1400--1525\,MHz, VSWR $\leq$ 1.5, H/V beamwidth 10$^\circ$/14$^\circ$, vertical linear polarisation \\
 front end & no pre-filter, no additional LNA (receiver chain only) \\
 receiver & SDRplay RSP1 zero-IF, dual chain, 59\,dB manual gain (no AGC) \\
 digitiser & 2 or 4\,MS/s; 65536-point Hann FFT chain + 4096-bin incoherent chain \\
