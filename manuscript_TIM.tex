@@ -202,6 +202,48 @@ the zero-IF spur; integrations are 600\,s drift scans.  Its data are used
 here only for real-instrument validation (Section~\ref{sec:rsp1val}), never
 for training or calibration.
 
+\begin{table}[!t]
+\centering
+\caption{The EUR~200-class instrument under test.  All figures are
+as-deployed; the dish aperture bracket spans the vendor's stated range.}
+\label{tab:instr}
+\footnotesize
+\begin{tabular}{ll}
+\toprule
+antenna & commercial mesh dish, 1.2--1.5\,m aperture @ 1420\,MHz \\
+front end & no pre-filter, no additional LNA (receiver chain only) \\
+receiver & SDRplay RSP1 zero-IF, dual chain, 59\,dB manual gain (no AGC) \\
+digitiser & 2 or 4\,MS/s; 65536-point Hann FFT chain + 4096-bin incoherent chain \\
+tuner offset & $+500$\,kHz from the line rest frequency (zero-IF spur avoidance) \\
+site & urban rooftop, Guilin, China ($25.32^\circ$N, $110.41^\circ$E, 198\,m) \\
+integration & 600\,s drift scans; per-channel bin 488\,Hz ($0.103$\,km/s) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Noise budget of a EUR~200 urban instrument}
+The measured noise budget of the deployed instrument is far from the
+radiometer equation, and the gap is where the engineering interest lives.
+With $B{=}488$\,Hz, $\tau{=}600$\,s and an assumed
+$T_{\mathrm{sys}}{=}200$\,K, the thermal prediction is
+$0.15$--$0.18\%$ fractional power per channel (Hann ENBW to boxcar); the
+measured per-channel scatter of the 600\,s product is $3.98\%$ --- a
+factor $22$--$26\times$ above thermal.  The budget decomposes into three
+characterised contributors: (i) the coherent-chain comb artefact
+(66.28\,kHz spacing, Section~\ref{sec:rsp1val}); (ii) a gain-switching
+transient with $\tau{=}47$\,s that requires a fixed warm-up discard
+window; and (iii) capture-to-capture gain drift, measured as a $3.73\%$
+median quiet-channel difference between two same-pointing captures two
+hours apart --- consistent with the $2.9\%$ systematic floor assumed in
+the November survey forecast.  Two practical consequences follow.
+First, systematics dominate the budget by more than an order of
+magnitude, so thermal-optimal averaging is not the binding constraint
+and robust temporal statistics --- aggregation before detection, with no
+labels --- are the appropriate tool; this is the design premise the
+detector suite tests.  Second, the systematic floor sets the achievable
+$l$--$v$ product sensitivity (Section~\ref{sec:rsp1val}), not the
+radiometer equation.
+
 \subsection{Injection--recovery methodology}
 Detection performance is validated by \emph{injection}: synthetic RFI of
 controlled morphology (width $w\in\{1,2,3,5,9\}$ pixels; amplitude
